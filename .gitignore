@@ -1,6 +1,6 @@
 .idea/
 .log/
 log/
-storage/
 tmp/
-/router/middleware/cache_response.go
+
+etc/chat.yaml
