@@ -25,6 +25,7 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		// 处理请求
 		var req types.InterviewAPPChatReq
+		//httpx.Parse(r, &req)
 		if err := httpx.Parse(r, &req); err != nil {
 			sendSSEError(w, flusher, err.Error())
 			return
@@ -35,9 +36,10 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		defer cancel() //释放资源
 
 		l := logic.NewChatLogic(ctx, svcCtx)
-		resp, err := l.Chat(&req)
+		respChan, err := l.Chat(&req)
 		if err != nil {
 			sendSSEError(w, flusher, err.Error())
+			return
 		}
 
 		//处理流式响应
@@ -47,8 +49,10 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 				return
 			case resp, ok := <-respChan:
 				if !ok {
-					fmt.Fprint(w, "event: end\ndata：{}\n\n") //结束事件
+					//fmt.Fprint(w, "event: end\ndata: {}\n\n") //结束事件
+					fmt.Fprint(w, "event: end\ndata: [[DONE]]\n\n") //结束事件
 					flusher.Flush()
+					return
 				}
 				//直接输出内容,不加JSON包装
 				fmt.Fprintf(w, "data: %s\n\n", resp.Content)
@@ -56,6 +60,8 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 				if resp.IsLast {
 					// 停止循环
+					fmt.Fprint(w, "data: [[DONE]]\n\n")
+					flusher.Flush()
 					return
 				}
 			}

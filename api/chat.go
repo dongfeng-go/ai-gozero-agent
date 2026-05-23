@@ -4,12 +4,11 @@
 package main
 
 import (
+	"ai-gozero-agent/api/internal/config"
+	"ai-gozero-agent/api/internal/handler"
+	"ai-gozero-agent/api/internal/svc"
 	"flag"
 	"fmt"
-
-	"api/internal/config"
-	"api/internal/handler"
-	"api/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"

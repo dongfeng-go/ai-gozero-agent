@@ -16,7 +16,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			{
 				// Go面试官聊天SSE流式接口
 				Method:  http.MethodGet,
-				Path:    "/inerview_app/chat/sse",
+				Path:    "/api/ai/inerview_app/chat/sse",
 				Handler: ChatHandler(serverCtx),
 			},
 		},
