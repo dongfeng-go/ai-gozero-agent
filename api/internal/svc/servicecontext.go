@@ -5,6 +5,7 @@ package svc
 
 import (
 	"ai-gozero-agent/api/internal/config"
+	"ai-gozero-agent/api/internal/types"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -12,6 +13,7 @@ import (
 type ServiceContext struct {
 	Config       config.Config
 	OpenAIClient *openai.Client
+	SessionStore types.SessionStore //新增会话存储
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -21,5 +23,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config:       c,
 		OpenAIClient: openai.NewClientWithConfig(conf),
+		SessionStore: NewMemorySessionStore(), //新增内存会话存储
 	}
 }

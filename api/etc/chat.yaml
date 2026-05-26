@@ -4,8 +4,9 @@ Port: 8123
 Timeout: 0 # 禁用超时
 
 OpenAI:
-  ApiKey: "sk-mykey"
+  ApiKey: "sk-"
   BaseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+#  Model: "qwen-plus"
   Model: "qwen-turbo"
   MaxTokens: 2048  # 最大token数
   Temperature: 0.7  # 温度参数

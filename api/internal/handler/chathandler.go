@@ -17,16 +17,31 @@ import (
 // Go面试官聊天SSE流式接口
 func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// 设置 CORS 头（与 OPTIONS 保持一致）
+		origin := r.Header.Get("Origin")
+		if origin == "" {
+			origin = "*"
+		}
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, Cache-Control, Connection")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		// 设置SSE响应头
 		setSSEHeaders(w)
 		flusher, _ := w.(http.Flusher)
 		// 立即刷新，确保响应头被发送给客户端
-		flusher.Flush()
+		//flusher.Flush()
 
 		// 处理请求
 		var req types.InterviewAPPChatReq
 		//httpx.Parse(r, &req)
-		if err := httpx.Parse(r, &req); err != nil {
+		//if err := httpx.Parse(r, &req); err != nil {
+		if err := httpx.ParseJsonBody(r, &req); err != nil {
 			sendSSEError(w, flusher, err.Error())
 			return
 		}
@@ -75,9 +90,9 @@ func setSSEHeaders(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Origin", "Origin")
 	w.Header().Set("X-Accel-Buffering", "no")
-	w.Header().Set("Transfer-Encoding", "chunked")
+	//w.Header().Set("Transfer-Encoding", "chunked")
 }
 
 func sendSSEError(w http.ResponseWriter, flusher http.Flusher, errMsg string) {

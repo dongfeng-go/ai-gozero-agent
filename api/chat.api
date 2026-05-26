@@ -21,6 +21,6 @@ type ChatResponse {
 service chat {
 	@doc "Go面试官聊天SSE流式接口"
 	@handler Chat
-	get /inerview_app/chat/sse (InterviewAPPChatReq) returns (ChatResponse)
+	post /inerview_app/chat/sse (InterviewAPPChatReq) returns (ChatResponse)
 }
 

@@ -13,9 +13,24 @@ import (
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
+			// RegisterHandlers 中
 			{
-				// Go面试官聊天SSE流式接口
-				Method:  http.MethodGet,
+				Method: http.MethodOptions,
+				Path:   "/api/ai/inerview_app/chat/sse",
+				Handler: func(w http.ResponseWriter, r *http.Request) {
+					origin := r.Header.Get("Origin")
+					if origin == "" {
+						origin = "*"
+					}
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+					w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+					w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept, Cache-Control, Connection")
+					w.Header().Set("Access-Control-Max-Age", "3600")
+					w.WriteHeader(http.StatusOK)
+				},
+			},
+			{
+				Method:  http.MethodPost,
 				Path:    "/api/ai/inerview_app/chat/sse",
 				Handler: ChatHandler(serverCtx),
 			},
