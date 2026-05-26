@@ -4,7 +4,7 @@ Port: 8123
 Timeout: 0 # 禁用超时
 
 OpenAI:
-  ApiKey: "sk-"
+  ApiKey: "sk-mykey"
   BaseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1"
 #  Model: "qwen-plus"
   Model: "qwen-turbo"
