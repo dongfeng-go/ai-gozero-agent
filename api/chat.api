@@ -9,8 +9,8 @@ info (
 )
 
 type InterviewAPPChatReq {
-	Message string `form:"message"`
-	ChatId  string `form:"chatId"`
+	Message string `json:"message"`
+	ChatId  string `json:"chatId"`
 }
 
 type ChatResponse {
@@ -21,6 +21,6 @@ type ChatResponse {
 service chat {
 	@doc "Go面试官聊天SSE流式接口"
 	@handler Chat
-	post /inerview_app/chat/sse (InterviewAPPChatReq) returns (ChatResponse)
+	post /api/ai/inerview_app/chat/sse (InterviewAPPChatReq) returns (ChatResponse)
 }
 

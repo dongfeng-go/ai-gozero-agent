@@ -9,6 +9,13 @@ type ChatResponse struct {
 }
 
 type InterviewAPPChatReq struct {
-	Message string `form:"message"`
-	ChatId  string `form:"chatId"`
+	Message string `form:"message" json:"message"`
+	ChatId  string `form:"chatId" json:"chatId"`
+	/*
+		go-zero 官方文档明确约定：
+		form 标签 → 对应 application/x-www-form-urlencoded 或 GET query 参数
+		json 标签 → 对应 application/json JSON 请求体
+		当你调用 httpx.ParseJsonBody 时，go-zero 内部会调用 mapping.UnmarshalJsonReader，它按 json 标签匹配字段。没有 json 标签时，go-zero 的 mapping 解析器无法正确将 JSON 的 "message" / "chatId" 映射到结构体字段。
+		而 httpx.Parse(r, &req) 也不行，因为它内部先调用 ParseForm（走 form 标签，从 query/form 中取值），再调用 ParseJsonBody（走 json 标签）。你的数据在 JSON body 里，但 json 标签缺失，所以两者都拿不到值
+	*/
 }

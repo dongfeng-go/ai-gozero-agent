@@ -4,8 +4,9 @@
 package handler
 
 import (
-	"ai-gozero-agent/api/internal/svc"
 	"net/http"
+
+	"ai-gozero-agent/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
 )
@@ -13,7 +14,7 @@ import (
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
-			// RegisterHandlers 中
+			// CORS 预检请求处理
 			{
 				Method: http.MethodOptions,
 				Path:   "/api/ai/inerview_app/chat/sse",
@@ -30,6 +31,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				},
 			},
 			{
+				// Go面试官聊天SSE流式接口
 				Method:  http.MethodPost,
 				Path:    "/api/ai/inerview_app/chat/sse",
 				Handler: ChatHandler(serverCtx),
