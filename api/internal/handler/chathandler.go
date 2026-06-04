@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
@@ -69,14 +70,19 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					flusher.Flush()
 					return
 				}
+				//加上这个内容处理,符合前端markdown格式
+				safeContent := strings.ReplaceAll(resp.Content, "\n", "\\n")
+				safeContent = strings.ReplaceAll(safeContent, "\r", "\\r")
 				//直接输出内容,不加JSON包装
-				fmt.Fprintf(w, "data: %s\n\n", resp.Content)
+				fmt.Fprintf(w, "data: %s\n\n", safeContent)
+				//直接输出内容,不加JSON包装
+				//fmt.Fprintf(w, "data: %s\n\n", resp.Content)
 				flusher.Flush()
 
 				if resp.IsLast {
 					// 停止循环
-					fmt.Fprint(w, "data: [[DONE]]\n\n")
-					flusher.Flush()
+					//fmt.Fprint(w, "data: [[DONE]]\n\n")
+					//flusher.Flush()
 					return
 				}
 			}
