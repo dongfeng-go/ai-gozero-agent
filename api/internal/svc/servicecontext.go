@@ -19,7 +19,8 @@ type ServiceContext struct {
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	//创建OpenAI客户端
-	openaiConfig := openai.DefaultConfig(c.OpenAI.ApiKey)
+	//openaiConfig := openai.DefaultConfig(c.OpenAI.ApiKey)
+	openaiConfig := openai.DefaultConfig("") //ollama不需要apikey
 	openaiConfig.BaseURL = c.OpenAI.BaseURL
 	openAIClient := openai.NewClientWithConfig(openaiConfig)
 

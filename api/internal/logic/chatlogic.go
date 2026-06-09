@@ -50,11 +50,15 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 
 		//3.创建OpenAI请求
 		request := openai.ChatCompletionRequest{
-			Model:       l.svcCtx.Config.OpenAI.Model,
-			Messages:    messages,
-			Stream:      true,
-			MaxTokens:   l.svcCtx.Config.OpenAI.MaxTokens,
-			Temperature: l.svcCtx.Config.OpenAI.Temperature,
+			Model:            l.svcCtx.Config.OpenAI.Model, //模型名称
+			Messages:         messages,
+			Stream:           true,
+			MaxTokens:        l.svcCtx.Config.OpenAI.MaxTokens,
+			Temperature:      l.svcCtx.Config.OpenAI.Temperature,      //随机性,温度参数,取值范围0-2,越高越随机
+			TopP:             l.svcCtx.Config.OpenAI.TopP,             //核心采样(0-1,越高越多样)
+			PresencePenalty:  l.svcCtx.Config.OpenAI.PresencePenalty,  //存在惩罚(-2.0,到2.0)
+			FrequencyPenalty: l.svcCtx.Config.OpenAI.FrequencyPenalty, //频率惩罚(-2.0,到2.0)
+			Seed:             l.svcCtx.Config.OpenAI.Seed,             //随机数种子(-1表示随机)
 		}
 
 		//4.创建流式响应
@@ -79,7 +83,7 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 					if fullResponse.String() != "" {
 						if saveErr := l.svcCtx.VectorStore.SaveMessage(
 							req.ChatId,
-							openai.ChatMessageRoleUser,
+							openai.ChatMessageRoleAssistant,
 							fullResponse.String(),
 						); saveErr != nil {
 							l.Logger.Errorf("保存助手消息失败：%v", saveErr)
@@ -105,72 +109,6 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 				}
 			}
 		}
-		/*//新增:添加用户消息到会话历史
-		userMessage := openai.ChatCompletionMessage{
-			Role:    openai.ChatMessageRoleUser,
-			Content: req.Message,
-		}
-		session.Messages = append(session.Messages, userMessage)
-
-		// 创建一个OpenAI客户端
-		request := openai.ChatCompletionRequest{
-			Model:       l.svcCtx.Config.OpenAI.Model,
-			Messages:    session.Messages,
-			Stream:      true,
-			MaxTokens:   l.svcCtx.Config.OpenAI.MaxTokens,
-			Temperature: l.svcCtx.Config.OpenAI.Temperature,
-		}
-
-		// 创建一个OpenAI流式请求
-		stream, err := l.svcCtx.OpenAIClient.CreateChatCompletionStream(l.ctx, request)
-		if err != nil {
-			l.Logger.Error(err)
-			return
-		}
-		defer stream.Close()
-
-		//新增:收集完整响应内容
-		var fullResponse strings.Builder
-
-		for {
-			select {
-			case <-l.ctx.Done():
-				return
-			default:
-				response, err := stream.Recv()
-				if errors.Is(err, io.EOF) {
-					//新增:流结束后保存会话
-					assistantMessage := openai.ChatCompletionMessage{
-						Role:    openai.ChatMessageRoleAssistant,
-						Content: fullResponse.String(),
-					}
-					session.Messages = append(session.Messages, assistantMessage)
-					if err := l.svcCtx.SessionStore.SaveSession(req.ChatId, session); err != nil {
-						l.Logger.Error("保存会话失败:%v", err)
-					}
-
-					//发送结束标记
-					ch <- &types.ChatResponse{IsLast: true}
-					return
-				}
-				if err != nil {
-					l.Logger.Error(err)
-					return
-				}
-				if len(response.Choices) > 0 {
-					content := response.Choices[0].Delta.Content
-					if content != "" {
-						//新增:收集完整响应内容
-						fullResponse.WriteString(content)
-					}
-
-					ch <- &types.ChatResponse{
-						Content: content,
-						IsLast:  false,
-					}
-				}
-			}
-		}*/
 	}()
 	return ch, nil
 }
