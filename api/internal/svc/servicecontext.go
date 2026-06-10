@@ -8,6 +8,7 @@ import (
 	"log"
 
 	openai "github.com/sashabaranov/go-openai"
+	//"github.com/unidoc/unipdf/v3/common/license"
 )
 
 type ServiceContext struct {
@@ -19,8 +20,8 @@ type ServiceContext struct {
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	//创建OpenAI客户端
-	//openaiConfig := openai.DefaultConfig(c.OpenAI.ApiKey)
-	openaiConfig := openai.DefaultConfig("") //ollama不需要apikey
+	openaiConfig := openai.DefaultConfig(c.OpenAI.ApiKey)
+	//openaiConfig := openai.DefaultConfig("") //ollama不需要apikey
 	openaiConfig.BaseURL = c.OpenAI.BaseURL
 	openAIClient := openai.NewClientWithConfig(openaiConfig)
 
@@ -30,6 +31,14 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		log.Fatalf("初始化向量数据库失败: %v", err)
 	}
 
+	// 设置UniPDF key
+	/*err = license.SetMeteredKey(c.UniPDFLicense)
+	if err != nil {
+		log.Fatalf("设置 UniPDF 许可证失败: %v", err)
+		//如果没有授权,UniPDF会加水印
+	}*/
+
+	// 测试向量数据库连接
 	if err := vectorStore.TestConnection(); err != nil {
 		log.Fatalf("向量数据库连接失败: %v", err)
 	} else {

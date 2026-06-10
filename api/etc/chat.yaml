@@ -3,31 +3,30 @@ Host: 0.0.0.0
 Port: 8123
 Timeout: 0 # 禁用超时
 
-#OpenAI:
-#  ApiKey: "sk-mykey"
-#  BaseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-#  #  Model: "qwen-plus"
-#  #  Model: "qwen-turbo"
-#  MaxTokens: 2048  # 最大token数
-#  Temperature: 0.7  # 温度参数
-
 OpenAI:
-  ApiKey: "" #本地不需要apikey
-  BaseURL: "http://localhost:11434/v1" #ollama本地默认地址
-  Model: "deepseek-r1:7b" #本地模型
-  EmbeddingModel: "nomic-embed-text"
+  ApiKey: "sk-mykey"
+  BaseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  Model: "qwen-plus"
+  MaxTokens: 2048  # 最大token数
+  Temperature: 0.7  # 温度参数
 
-  MaxTokens: 512  # 最大token数
-  Temperature: 0.7  # 温度参数,取值范围0-2,越高越随机
-  TopP: 0.9 # 核心采样(0-1,越高越多样)
-  PresencePenalty: 0.7  # 存在惩罚(-2.0,到2.0)
-  FrequencyPenalty: 0.8 # 频率惩罚(-2.0,到2.0)
-
-  # 高级控制参数
-  #  StopSequence: [ "\n","###" ] # 停止符
-
-  #调试参数
-  Seed: -1 # 随机数种子(-1=随机,42固定种子)
+#OpenAI:
+#  ApiKey: "" #本地不需要apikey
+#  BaseURL: "http://localhost:11434/v1" #ollama本地默认地址
+#  Model: "deepseek-r1:7b" #本地模型
+#  EmbeddingModel: "nomic-embed-text"
+#
+#  MaxTokens: 512  # 最大token数
+#  Temperature: 0.7  # 温度参数,取值范围0-2,越高越随机
+#  TopP: 0.9 # 核心采样(0-1,越高越多样)
+#  PresencePenalty: 0.7  # 存在惩罚(-2.0,到2.0)
+#  FrequencyPenalty: 0.8 # 频率惩罚(-2.0,到2.0)
+#
+#  # 高级控制参数
+#  #  StopSequence: [ "\n","###" ] # 停止符
+#
+#  #调试参数
+#  Seed: -1 # 随机数种子(-1=随机,42固定种子)
 
 # 向量数据库配置
 VectorDB:
@@ -38,5 +37,8 @@ VectorDB:
   Password: "123456"
   Table: "vector_store"
   MaxConn: 20
-  EmbeddingModel: "nomic-embed-text"
-#  EmbeddingModel: "text-embedding-v4"
+  #  EmbeddingModel: "nomic-embed-text" #本地模型
+  EmbeddingModel: "text-embedding-v4" #线上模型
+
+# UniPDF商业版许可证密钥
+UniPDFLicense: "myKey"

@@ -50,15 +50,15 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 
 		//3.创建OpenAI请求
 		request := openai.ChatCompletionRequest{
-			Model:            l.svcCtx.Config.OpenAI.Model, //模型名称
-			Messages:         messages,
-			Stream:           true,
-			MaxTokens:        l.svcCtx.Config.OpenAI.MaxTokens,
-			Temperature:      l.svcCtx.Config.OpenAI.Temperature,      //随机性,温度参数,取值范围0-2,越高越随机
-			TopP:             l.svcCtx.Config.OpenAI.TopP,             //核心采样(0-1,越高越多样)
-			PresencePenalty:  l.svcCtx.Config.OpenAI.PresencePenalty,  //存在惩罚(-2.0,到2.0)
-			FrequencyPenalty: l.svcCtx.Config.OpenAI.FrequencyPenalty, //频率惩罚(-2.0,到2.0)
-			Seed:             l.svcCtx.Config.OpenAI.Seed,             //随机数种子(-1表示随机)
+			Model:       l.svcCtx.Config.OpenAI.Model, //模型名称
+			Messages:    messages,
+			Stream:      true,
+			MaxTokens:   l.svcCtx.Config.OpenAI.MaxTokens,
+			Temperature: l.svcCtx.Config.OpenAI.Temperature, //随机性,温度参数,取值范围0-2,越高越随机
+			//TopP:             l.svcCtx.Config.OpenAI.TopP,             //核心采样(0-1,越高越多样)
+			//PresencePenalty:  l.svcCtx.Config.OpenAI.PresencePenalty,  //存在惩罚(-2.0,到2.0)
+			//FrequencyPenalty: l.svcCtx.Config.OpenAI.FrequencyPenalty, //频率惩罚(-2.0,到2.0)
+			//Seed:             l.svcCtx.Config.OpenAI.Seed,             //随机数种子(-1表示随机)
 		}
 
 		//4.创建流式响应
