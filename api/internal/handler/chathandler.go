@@ -42,8 +42,6 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		// 处理请求
 		var req types.InterviewAPPChatReq
-		//httpx.Parse(r, &req)
-		//if err := httpx.Parse(r, &req); err != nil {
 		contentType := r.Header.Get("Content-Type")
 		if strings.HasPrefix(contentType, "multipart/form-data") {
 			// 解析 multipart 表单，32MB 内存限制
@@ -71,6 +69,8 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			}
 		} else {
 			// 原有 JSON 解析逻辑
+			//httpx.Parse(r, &req)
+			//if err := httpx.Parse(r, &req); err != nil {
 			if err := httpx.ParseJsonBody(r, &req); err != nil {
 				sendSSEError(w, flusher, err.Error())
 				return
