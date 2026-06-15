@@ -6,8 +6,10 @@ package logic
 import (
 	"ai-gozero-agent/api/internal/svc"
 	"ai-gozero-agent/api/internal/types"
+	"ai-gozero-agent/api/internal/utils"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -40,8 +42,17 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 			l.Logger.Errorf("保存用户消息失败:%v", err)
 			//只记录日志，不返回错误给前端
 		}
+		//2.知识检索(RAG核心)
+		knowledge, err := l.svcCtx.VectorStore.RetrieveKnowledge(req.Message, l.svcCtx.Config.VectorDB.Knowledge.TopK)
+		if err != nil {
+			l.Logger.Errorf("知识检索失败:%v", err)
+			//ch <- &types.ChatResponse{Content: "知识检索失败", IsLast: true}
+			knowledge = []types.KnowledgeChunk{} //默认为空,确保不为nil
+		}
+
 		//2.获取会话历史消息
-		messages, err := l.getSessionHistory(req.ChatId)
+		//messages, err := l.getSessionHistory(req.ChatId)
+		messages, err := l.getSessionHistory(req.ChatId, knowledge)
 		if err != nil {
 			l.Logger.Errorf("获取会话历史消息失败:%v", err)
 			ch <- &types.ChatResponse{Content: "获取会话历史消息失败", IsLast: true}
@@ -114,19 +125,32 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 }
 
 // 获取会话历史消息
-func (l *ChatLogic) getSessionHistory(chatId string) ([]openai.ChatCompletionMessage, error) {
+func (l *ChatLogic) getSessionHistory(chatId string, knowledge []types.KnowledgeChunk) ([]openai.ChatCompletionMessage, error) {
 	//获取最近10条历史消息(约5轮对话)
 	vectorMessages, err := l.svcCtx.VectorStore.GetMessages(chatId, 10)
 	if err != nil {
 		return nil, err
 	}
+	// 构建系统消息 - 注入知识
+	//systemMessage := "你是一个专业的GO语言面试官，负责评估候选人的GO语言能力。请提出有深度的问题并评估回答。"
+	systemMessage := "你是一个AI智能问答助手。"
+	if len(knowledge) > 0 {
+		systemMessage += "\n\n相关背景知识："
+		for i, k := range knowledge {
+			//限制知识片段长度
+			truncatedContent := utils.TruncateText(k.Content, 500)
+			//truncatedContent := utils.TruncateText(k.Content, l.svcCtx.Config.VectorDB.Knowledge.MaxContextLength)
+			systemMessage += fmt.Sprintf("\n[知识片段%d]%s：%s", i+1, k.Title, truncatedContent)
+		}
+	}
+	fmt.Println("检索的数据:", systemMessage)
 	//转换为OpenAI消息
 	messages := make([]openai.ChatCompletionMessage, 0, len(vectorMessages)+1)
 
 	//添加系统消息
 	messages = append(messages, openai.ChatCompletionMessage{
 		Role:    openai.ChatMessageRoleSystem,
-		Content: "你是一个专业的GO语言面试官，负责评估候选人的GO语言能力。请提出有深度的问题并评估回答。",
+		Content: systemMessage,
 	})
 	//添加历史消息
 	for _, msg := range vectorMessages {
