@@ -4,7 +4,6 @@ import (
 	"ai-gozero-agent/api/internal/logic"
 	"ai-gozero-agent/api/internal/svc"
 	"ai-gozero-agent/api/internal/types"
-	"ai-gozero-agent/api/internal/utils"
 	"errors"
 	"fmt"
 	"net/http"
@@ -32,7 +31,7 @@ func KnowledgeUploadHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		}
 
 		//提取文本
-		content, err := utils.ExtractPDFText(file)
+		content, err := svcCtx.PdfClient.ExtractText(file, header.Filename)
 		if err != nil {
 			httpx.Error(w, err)
 			return

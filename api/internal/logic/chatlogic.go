@@ -132,8 +132,8 @@ func (l *ChatLogic) getSessionHistory(chatId string, knowledge []types.Knowledge
 		return nil, err
 	}
 	// 构建系统消息 - 注入知识
-	//systemMessage := "你是一个专业的GO语言面试官，负责评估候选人的GO语言能力。请提出有深度的问题并评估回答。"
-	systemMessage := "你是一个AI智能问答助手。"
+	systemMessage := "你是一个专业的GO语言面试官，负责评估候选人的GO语言能力。请提出有深度的问题并评估回答。"
+	//systemMessage := "你是一个AI智能问答助手。"
 	if len(knowledge) > 0 {
 		systemMessage += "\n\n相关背景知识："
 		for i, k := range knowledge {

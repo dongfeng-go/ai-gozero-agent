@@ -9,6 +9,9 @@ import (
 
 type Config struct {
 	rest.RestConf
+	MCP struct {
+		Endpoint string
+	}
 	OpenAI struct {
 		ApiKey  string `json:"apiKey"`  //api密钥
 		BaseURL string `json:"baseUrl"` //api地址

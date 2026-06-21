@@ -4,3 +4,4 @@ log/
 tmp/
 
 api/etc/chat_dev.yaml
+mcp/etc/chat_dev.yaml

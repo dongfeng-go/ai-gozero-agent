@@ -16,6 +16,7 @@ type ServiceContext struct {
 	OpenAIClient *openai.Client
 	//SessionStore types.SessionStore //新增会话存储
 	VectorStore *VectorStore //消息存储
+	PdfClient   *PdfClient
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -49,6 +50,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Config:       c,
 		OpenAIClient: openAIClient,
 		VectorStore:  vectorStore, //新增向量存储
+		PdfClient:    NewPdfClient(c.MCP.Endpoint),
 	}
 }
 

@@ -39,9 +39,9 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		flusher, _ := w.(http.Flusher)
 		// 立即刷新，确保响应头被发送给客户端
 		//flusher.Flush()
-
 		// 处理请求
 		var req types.InterviewAPPChatReq
+
 		contentType := r.Header.Get("Content-Type")
 		if strings.HasPrefix(contentType, "multipart/form-data") {
 			// 解析 multipart 表单，32MB 内存限制
@@ -59,10 +59,15 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 					sendSSEError(w, flusher, "仅支持PDF文件")
 					return
 				}
-				//使用UniPDF提取文本
+				/*//使用UniPDF提取文本
 				pdfContent, err := utils.ExtractPDFText(file)
 				if err != nil {
 					sendSSEError(w, flusher, "PDF提取失败: "+err.Error())
+					return
+				}*/
+				pdfContent, err := svcCtx.PdfClient.ExtractText(file, header.Filename)
+				if err != nil {
+					logx.Errorf("PDF提取失败: " + err.Error())
 					return
 				}
 				req.Message = utils.CombineMessages(req.Message, pdfContent)
@@ -78,28 +83,25 @@ func ChatHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			// 注意：JSON 模式下文件上传不支持，保持原有逻辑
 		}
 
-		//处理PDF文件
-		/*var pdfContent string
-		if file, header, err := r.FormFile("file"); err == nil {
-			defer file.Close()
-
-			if header.Header.Get("Content-Type") != "application/pdf" {//验证文件类型
-		        http.Error(w, "仅支持PDF文件", http.StatusBadRequest)
-				return
-			}
-
-			if content, err := utils.ExtractPDFText(file); err == nil {//使用UniPDF提取文本
-				pdfContent = content
-			} else {
-
-						logx.Errorf("PDF提取失败：%v", err)
-
-						http.Error(w, "PDF提取失败", http.StatusInternalServerError)
-				return
-			}
-		}
-		req.Message = utils.CombineMessages(req.Message, pdfContent)*/
-		logx.Infof("用户问题+++++++666666：%s", req.Message)
+		////处理PDF文件
+		//var pdfContent string
+		//if file, header, err := r.FormFile("file"); err == nil {
+		//	defer file.Close()
+		//
+		//	if header.Header.Get("Content-Type") != "application/pdf" { //验证文件类型
+		//		http.Error(w, "仅支持PDF文件", http.StatusBadRequest)
+		//		return
+		//	}
+		//	if content, err := utils.ExtractPDFText(file); err == nil { //使用UniPDF提取文本
+		//		pdfContent = content
+		//	} else {
+		//		logx.Errorf("PDF提取失败：%v", err)
+		//		http.Error(w, "PDF提取失败", http.StatusInternalServerError)
+		//		return
+		//	}
+		//}
+		//req.Message = utils.CombineMessages(req.Message, pdfContent)
+		logx.Infof("用户问题++++++++：%s", req.Message)
 
 		//创建取消上下文
 		ctx, cancel := context.WithCancel(r.Context())
