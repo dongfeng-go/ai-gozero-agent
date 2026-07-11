@@ -30,6 +30,7 @@ type Config struct {
 	VectorDB VectorDBConfig //向量数据库配置
 
 	UniPDFLicense string //UniPDF商业版许可证密钥
+	Redis         Redis
 }
 
 // 向量数据库配置
@@ -49,4 +50,11 @@ type Knowledge struct {
 	MaxChunkSize     int
 	TopK             int
 	MaxContextLength int
+}
+
+type Redis struct {
+	Host     string
+	Port     int
+	Password string
+	DB       int
 }

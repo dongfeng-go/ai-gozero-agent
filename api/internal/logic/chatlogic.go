@@ -36,13 +36,21 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 	ch := make(chan *types.ChatResponse)
 	go func() {
 		defer close(ch)
+		stateManager := NewStateManager(l.svcCtx)
 
 		//1.保存用户消息到向量数据库
 		if err := l.svcCtx.VectorStore.SaveMessage(req.ChatId, openai.ChatMessageRoleUser, req.Message); err != nil {
 			l.Logger.Errorf("保存用户消息失败:%v", err)
 			//只记录日志，不返回错误给前端
 		}
-		//2.知识检索(RAG核心)
+		//2.获取当前状态,确保初始化
+		currentState, err := stateManager.GetOrInitState(req.ChatId)
+		if err != nil {
+			l.Logger.Errorf("获取状态失败:%v", err)
+			currentState = types.StateStart
+		}
+
+		//3.知识检索(RAG核心)
 		knowledge, err := l.svcCtx.VectorStore.RetrieveKnowledge(req.Message, l.svcCtx.Config.VectorDB.Knowledge.TopK)
 		if err != nil {
 			l.Logger.Errorf("知识检索失败:%v", err)
@@ -50,16 +58,24 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 			knowledge = []types.KnowledgeChunk{} //默认为空,确保不为nil
 		}
 
-		//2.获取会话历史消息
-		//messages, err := l.getSessionHistory(req.ChatId)
-		messages, err := l.getSessionHistory(req.ChatId, knowledge)
+		//4.构建系统消息(带状态)
+		messages, err := l.buildMessagesWithState(req.ChatId, currentState, knowledge)
 		if err != nil {
-			l.Logger.Errorf("获取会话历史消息失败:%v", err)
-			ch <- &types.ChatResponse{Content: "获取会话历史消息失败", IsLast: true}
+			l.Logger.Errorf("构建消息失败:%v", err)
+			ch <- &types.ChatResponse{Content: "系统错误：无法构建对话", IsLast: true}
 			return
 		}
 
-		//3.创建OpenAI请求
+		//2.获取会话历史消息
+		//messages, err := l.getSessionHistory(req.ChatId)
+		//messages, err := l.getSessionHistory(req.ChatId, knowledge)
+		//if err != nil {
+		//	l.Logger.Errorf("获取会话历史消息失败:%v", err)
+		//	ch <- &types.ChatResponse{Content: "获取会话历史消息失败", IsLast: true}
+		//	return
+		//}
+
+		//5.创建OpenAI请求
 		request := openai.ChatCompletionRequest{
 			Model:       l.svcCtx.Config.OpenAI.Model, //模型名称
 			Messages:    messages,
@@ -72,7 +88,7 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 			//Seed:             l.svcCtx.Config.OpenAI.Seed,             //随机数种子(-1表示随机)
 		}
 
-		//4.创建流式响应
+		//6.创建流式响应
 		stream, err := l.svcCtx.OpenAIClient.CreateChatCompletionStream(l.ctx, request)
 		if err != nil {
 			l.Logger.Error("创建聊天完成流失败: ", err)
@@ -99,6 +115,12 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 						); saveErr != nil {
 							l.Logger.Errorf("保存助手消息失败：%v", saveErr)
 						}
+						//更新状态
+						newState, err := stateManager.EvaluateAndUpdateState(req.ChatId, fullResponse.String())
+						if err != nil {
+							l.Logger.Errorf("评估并更新状态失败：%v", err)
+						}
+						l.Logger.Infof("评估并更新状态成功： %s -> %s", currentState, newState)
 					}
 					ch <- &types.ChatResponse{IsLast: true}
 					return
@@ -122,6 +144,54 @@ func (l *ChatLogic) Chat(req *types.InterviewAPPChatReq) (<-chan *types.ChatResp
 		}
 	}()
 	return ch, nil
+}
+
+// 构建带状态的消息
+func (l *ChatLogic) buildMessagesWithState(chatId, currentState string, knowledge []types.KnowledgeChunk) ([]openai.ChatCompletionMessage, error) {
+	//构建状态特定的系统消息
+	systemMessage := "你是一个专业的GO语言面试官，负责评估候选人的GO语言能力。"
+	systemMessage += "\n\n当前状态：" + currentState
+	switch currentState {
+	case types.StateStart:
+		systemMessage += "\n目标：欢迎候选人并开始面试流程"
+	case types.StateQuestion:
+		systemMessage += "\n目标：提出有深度的问题考察GO语言核心概念"
+	case types.StateFollowUp:
+		systemMessage += "\n目标：基于候选人的回答进行追问,深入考察理解深度"
+	case types.StateEvaluate:
+		systemMessage += "\n目标：全面评估候选人的技术能力"
+	case types.StateEnd:
+		systemMessage += "\n目标：结束面试并提供反馈"
+	}
+	//注入知识库
+	if len(knowledge) > 0 {
+		systemMessage += "\n\n相关背景知识："
+		for i, k := range knowledge {
+			//限制知识片段长度
+			truncatedContent := utils.TruncateText(k.Content, 500)
+			//truncatedContent := utils.TruncateText(k.Content, l.svcCtx.Config.VectorDB.Knowledge.MaxContextLength)
+			systemMessage += fmt.Sprintf("\n[知识片段%d]%s：%s", i+1, k.Title, truncatedContent)
+		}
+	}
+
+	//获取历史消息
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: systemMessage,
+		},
+	}
+	history, err := l.svcCtx.VectorStore.GetMessages(chatId, 10)
+	if err != nil {
+		return nil, err
+	}
+	for _, msg := range history {
+		messages = append(messages, openai.ChatCompletionMessage{
+			Role:    msg.Role,
+			Content: msg.Content,
+		})
+	}
+	return messages, nil
 }
 
 // 获取会话历史消息
