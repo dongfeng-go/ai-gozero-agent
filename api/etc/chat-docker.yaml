@@ -1,0 +1,37 @@
+Name: chat
+Host: 0.0.0.0
+Port: 8123
+Timeout: 0 # 禁用超时
+
+OpenAI:
+  ApiKey: "sk-mykey"
+  BaseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  Model: "qwen-plus"
+  #  Model: "qwen-turbo"
+  MaxTokens: 2048  # 最大token数
+  Temperature: 0.7  # 温度参数
+
+# 向量数据库配置
+VectorDB:
+  Host: "postgres" # 使用Docker服务名
+  Port: 5432
+  DBName: "ai"
+  User: "root"
+  Password: "123456"
+  Table: "vector_store"
+  MaxConn: 20
+  #  EmbeddingModel: "nomic-embed-text" #本地模型
+  EmbeddingModel: "text-embedding-v4" #线上模型
+  Knowledge:
+    MaxChunkSize: 1000 #知识块最大长度
+    TopK: 3 #检索返回的知识片段数量
+    MaxContextLength: 500 #注入上下文的截断长度
+
+MCP:
+  Endpoint: "mcp:8066" # 使用Docker服务名
+
+Redis:
+  Host: "redis" # 使用Docker服务名
+  Port: 6379
+  Password: ""
+  DB: 0
